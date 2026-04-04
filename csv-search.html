@@ -1,0 +1,1370 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV Search Tool</title>
+<style>
+      :root {
+        --bg: #220408;
+        --panel: #35070c;
+        --panel-2: #4a0b12;
+        --panel-3: #2b060a;
+        --control-height: 44px;
+        --text: #fff4f5;
+        --muted: #ffb4ba;
+        --accent: #e31321;
+        --accent-2: #ff4d58;
+        --border: #8e1018;
+        --danger: #ff6b76;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .app {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+      }
+h1 {
+        margin: 0 0 4px;
+        font-size: 1.5rem;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .controls {
+        display: grid;
+        gap: 12px;
+      }
+
+      .control-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 12px;
+      }
+
+      .control-row.options {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+
+      input[type="text"],
+      select,
+      input[type="file"] {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel-2);
+        color: var(--text);
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        min-height: var(--control-height);
+      }
+
+      input[type="file"] {
+        padding: 8px 10px;
+      }
+
+      input[type="file"]::file-selector-button {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel-3);
+        color: var(--text);
+        padding: 6px 10px;
+        margin-right: 10px;
+        cursor: pointer;
+      }
+
+      .menu {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel-2);
+        padding: 10px;
+      }
+
+      .menu-footer {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 10px;
+      }
+
+      .menu-footer .option-group {
+        width: min(220px, 100%);
+      }
+
+      .menu-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .menu-header strong {
+        font-size: 0.95rem;
+      }
+
+      .menu-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .header-row-with-loading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      button {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel-2);
+        color: var(--text);
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+
+      button:hover {
+        border-color: var(--accent);
+        background: #5c0f17;
+      }
+
+      #searchButton,
+      #exportButton {
+        background: #4a1212;
+        border-color: #ff5e68;
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 0 0 1px #6e0f15 inset, 0 0 0 2px #ff4d5833;
+      }
+
+      #searchButton:hover,
+      #exportButton:hover {
+        background: #5a151b;
+        border-color: #ff7a82;
+        box-shadow: 0 0 0 1px #7f131a inset, 0 0 0 2px #ff4d5855;
+      }
+
+      .file-list {
+        display: grid;
+        gap: 6px;
+        max-height: 210px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .file-item {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 8px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+      }
+
+      .file-item:hover {
+        border-color: var(--border);
+      }
+
+      .file-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .file-stats {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .status {
+        display: grid;
+        gap: 2px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .option-group {
+        display: grid;
+        gap: 6px;
+      }
+
+      .option-group label {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .checkbox-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel-2);
+        padding: 10px 12px;
+        min-height: var(--control-height);
+      }
+
+      .checkbox-inline span {
+        font-size: 0.92rem;
+      }
+
+      #caseSensitiveCheckbox + span {
+        color: #fff;
+      }
+
+      .control-row > button,
+      .control-row > input[type="text"],
+      .control-row > input[type="file"],
+      .control-row > select,
+      .control-row .checkbox-inline,
+      .control-row.options .option-group select,
+      .control-row.options .option-group button {
+        min-height: var(--control-height);
+      }
+
+      .status strong {
+        color: var(--text);
+      }
+
+      .results {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-top: 1px solid var(--border);
+        background: var(--panel-3);
+      }
+
+      .pagination-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pagination-info {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .page-footer {
+        margin-top: 8px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.2px;
+        line-height: 1.5;
+      }
+
+      .page-footer a {
+        color: #fff;
+        text-decoration: none;
+      }
+
+      .page-footer a:hover {
+        color: var(--accent-2);
+        text-decoration: underline;
+      }
+
+      .loading-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid #ffffff55;
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .header-export-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        background: var(--panel-3);
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.92rem;
+        vertical-align: top;
+      }
+
+      td code {
+        color: #ffe082;
+        background: var(--panel-3);
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+
+      .empty {
+        padding: 14px 12px;
+        color: var(--muted);
+      }
+
+      .error {
+        color: var(--danger);
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+
+      td.match-highlight {
+        background: #3a2a00;
+        border-left: 3px solid #ffe082;
+      }
+
+      .row-match-detail {
+        display: grid;
+        gap: 4px;
+      }
+
+      .row-match-pair {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+      }
+
+      .row-match-header {
+        color: var(--muted);
+        font-size: 0.82rem;
+        min-width: 80px;
+        flex-shrink: 0;
+      }
+
+      .row-match-value code {
+        color: #ffe082;
+        background: var(--panel-3);
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+
+      @media (max-width: 900px) {
+.control-row {
+          grid-template-columns: 1fr;
+        }
+
+        .control-row.options {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="card">
+                  <h1>CSV Search</h1>
+          <p>Load one or more CSV files and search across selected files.</p>
+        </div>
+</section>
+
+      <section class="card controls">
+        <div class="control-row">
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Search terms (comma-separated). Press Search or Enter."
+          />
+          <label class="checkbox-inline" for="autoSearchCheckbox">
+            <input id="autoSearchCheckbox" type="checkbox" />
+            <span>Auto search while typing</span>
+          </label>
+          <button id="searchButton" type="button">Search</button>
+          <input id="fileInput" type="file" accept=".csv,text/csv" multiple />
+        </div>
+
+        <div class="control-row options">
+          <div class="option-group">
+            <label for="matchTypeSelect">Match Type</label>
+            <select id="matchTypeSelect" aria-label="Match Type">
+              <option value="contains">Partial match (contains)</option>
+              <option value="exact">Exact match</option>
+              <option value="wildcard">Wildcard match</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label for="termOperatorSelect">Multiple Terms Operator</label>
+            <select id="termOperatorSelect" aria-label="Multiple Terms Operator">
+              <option value="or">OR (any term may match)</option>
+              <option value="and">AND (all terms must match)</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label for="wildcardSyntaxSelect">Wildcard Syntax</label>
+            <select id="wildcardSyntaxSelect" aria-label="Wildcard Syntax">
+              <option value="asterisk">Asterisk style (* = many, ? = one)</option>
+              <option value="sql">SQL style (% = many, _ = one)</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label for="searchScopeSelect">Search Scope</label>
+            <select id="searchScopeSelect" aria-label="Search Scope">
+              <option value="cell">Cell (terms per cell)</option>
+              <option value="row">Row (terms across row)</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Case</label>
+            <label class="checkbox-inline" for="caseSensitiveCheckbox">
+              <input id="caseSensitiveCheckbox" type="checkbox" />
+              <span>Case sensitive</span>
+            </label>
+          </div>
+          <div class="option-group">
+            <label>Export</label>
+            <button id="exportButton" type="button">Export results CSV</button>
+          </div>
+        </div>
+
+        <div class="menu">
+          <div class="menu-header">
+            <strong>File Menu (Search Scope)</strong>
+            <div class="menu-actions">
+              <button id="selectAllButton" type="button">Select all</button>
+              <button id="selectNoneButton" type="button">Select none</button>
+              <button id="reloadButton" type="button">Reload files</button>
+            </div>
+          </div>
+          <div id="fileList" class="file-list">
+            <div class="hint">No files loaded yet.</div>
+          </div>
+        </div>
+
+        <div class="menu-footer">
+          <div class="option-group">
+            <select id="delimiterSelect" aria-label="Delimiter">
+              <option value=",">Delimiter: Comma (,)</option>
+              <option value=";" selected>Delimiter: Semicolon (;)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="status" class="status">
+          <span><strong>Loaded files:</strong> 0</span>
+          <span><strong>Selected files:</strong> 0</span>
+          <span><strong>Total matches:</strong> 0</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="header-row-with-loading">
+          <span class="hint">Results</span>
+          <div id="loadingIndicator" class="loading-indicator hidden">
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Searching...</span>
+          </div>
+        </div>
+        <div class="results">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  <label class="header-export-option" for="exportColFile">
+                    <input id="exportColFile" type="checkbox" checked />
+                    <span>File</span>
+                  </label>
+                </th>
+                <th>
+                  <label class="header-export-option" for="exportColRow">
+                    <input id="exportColRow" type="checkbox" checked />
+                    <span>Row</span>
+                  </label>
+                </th>
+                <th>
+                  <label class="header-export-option" for="exportColColumn">
+                    <input id="exportColColumn" type="checkbox" checked />
+                    <span>Column</span>
+                  </label>
+                </th>
+                <th>
+                  <label class="header-export-option" for="exportColHeader">
+                    <input id="exportColHeader" type="checkbox" checked />
+                    <span>Header</span>
+                  </label>
+                </th>
+                <th>
+                  <label class="header-export-option" for="exportColValue">
+                    <input id="exportColValue" type="checkbox" checked />
+                    <span>Value</span>
+                  </label>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody">
+              <tr>
+                <td class="empty" colspan="5">
+                  Enter a search term and load CSV files.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <div class="pagination-group">
+              <button id="prevPageButton" type="button">Previous</button>
+              <button id="nextPageButton" type="button">Next</button>
+              <span id="pageInfo" class="pagination-info">Page 1 / 1</span>
+            </div>
+            <div class="pagination-group">
+              <label for="pageSizeSelect" class="pagination-info">Rows per page</label>
+              <select id="pageSizeSelect" aria-label="Rows per page">
+                <option value="100">100</option>
+                <option value="250" selected>250</option>
+                <option value="500">500</option>
+                <option value="1000">1000</option>
+              </select>
+              <span id="resultRangeInfo" class="pagination-info">0-0 of 0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer id="appFooter" class="page-footer"></footer>
+    </main>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const searchInput = document.getElementById("searchInput");
+      const searchButton = document.getElementById("searchButton");
+      const delimiterSelect = document.getElementById("delimiterSelect");
+      const fileList = document.getElementById("fileList");
+      const status = document.getElementById("status");
+      const resultsBody = document.getElementById("resultsBody");
+      const loadingIndicator = document.getElementById("loadingIndicator");
+      const prevPageButton = document.getElementById("prevPageButton");
+      const nextPageButton = document.getElementById("nextPageButton");
+      const pageInfo = document.getElementById("pageInfo");
+      const pageSizeSelect = document.getElementById("pageSizeSelect");
+      const resultRangeInfo = document.getElementById("resultRangeInfo");
+      const matchTypeSelect = document.getElementById("matchTypeSelect");
+      const termOperatorSelect = document.getElementById("termOperatorSelect");
+      const wildcardSyntaxSelect = document.getElementById("wildcardSyntaxSelect");
+      const searchScopeSelect = document.getElementById("searchScopeSelect");
+      const autoSearchCheckbox = document.getElementById("autoSearchCheckbox");
+      const caseSensitiveCheckbox = document.getElementById("caseSensitiveCheckbox");
+      const exportButton = document.getElementById("exportButton");
+      const selectAllButton = document.getElementById("selectAllButton");
+      const selectNoneButton = document.getElementById("selectNoneButton");
+      const reloadButton = document.getElementById("reloadButton");
+const FOOTER_COPYRIGHT =
+        "Open source under MIT License.";
+      const FOOTER_LINKS = [
+        { label: "CSV & XLSX Search", href: "index.html" },
+      ];
+
+      const loadedFiles = [];
+      let parseErrorMessage = "";
+      let lastMatches = [];
+      let currentPage = 1;
+      const SEARCH_DEBOUNCE_MS = 400;
+      let searchDebounceTimer = null;
+      let activeSearchId = 0;
+
+      fileInput.addEventListener("change", async (event) => {
+        const files = Array.from(event.target.files || []);
+        await loadFiles(files);
+      });
+
+      searchInput.addEventListener("input", () => {
+        scheduleSearchFromTyping();
+      });
+
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          runSearch();
+        }
+      });
+
+      searchButton.addEventListener("click", () => {
+        runSearch();
+      });
+
+      matchTypeSelect.addEventListener("change", () => {
+        updateWildcardControlState();
+        runSearchIfAutoEnabled();
+      });
+
+      termOperatorSelect.addEventListener("change", () => {
+        runSearchIfAutoEnabled();
+      });
+
+      caseSensitiveCheckbox.addEventListener("change", () => {
+        runSearchIfAutoEnabled();
+      });
+
+      wildcardSyntaxSelect.addEventListener("change", () => {
+        runSearchIfAutoEnabled();
+      });
+
+      searchScopeSelect.addEventListener("change", () => {
+        updateTableHeaders();
+        runSearchIfAutoEnabled();
+      });
+
+      autoSearchCheckbox.addEventListener("change", () => {
+        if (autoSearchCheckbox.checked) {
+          runSearch();
+        }
+      });
+
+      delimiterSelect.addEventListener("change", async () => {
+        if (loadedFiles.length === 0) {
+          return;
+        }
+        await reloadLoadedFiles();
+      });
+
+      selectAllButton.addEventListener("click", () => {
+        loadedFiles.forEach((entry) => {
+          entry.selected = true;
+        });
+        renderFileMenu();
+        renderResults();
+      });
+
+      selectNoneButton.addEventListener("click", () => {
+        loadedFiles.forEach((entry) => {
+          entry.selected = false;
+        });
+        renderFileMenu();
+        renderResults();
+      });
+
+      reloadButton.addEventListener("click", async () => {
+        await reloadLoadedFiles();
+      });
+
+      exportButton.addEventListener("click", () => {
+        exportMatchesToCsv(lastMatches);
+      });
+
+      pageSizeSelect.addEventListener("change", () => {
+        currentPage = 1;
+        renderResults();
+      });
+
+      prevPageButton.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          runSearchPageRefresh();
+        }
+      });
+
+      nextPageButton.addEventListener("click", () => {
+        const pageSize = Number(pageSizeSelect.value);
+        const totalPages = Math.max(1, Math.ceil(lastMatches.length / pageSize));
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          runSearchPageRefresh();
+        }
+      });
+
+      updateWildcardControlState();
+      updatePaginationState(0, 1, 0, 0);
+      initializeFooterProtection();
+
+
+      async function loadFiles(files) {
+        loadedFiles.length = 0;
+        parseErrorMessage = "";
+
+        for (const file of files) {
+          try {
+            const text = await file.text();
+            const parsed = parseCsv(text, delimiterSelect.value);
+            loadedFiles.push({
+              file,
+              fileName: file.name,
+              selected: true,
+              headers: parsed.headers,
+              rows: parsed.rows,
+            });
+          } catch (error) {
+            parseErrorMessage = `Could not parse "${file.name}": ${error.message}`;
+          }
+        }
+
+        renderFileMenu();
+        renderResults();
+      }
+
+      async function reloadLoadedFiles() {
+        if (loadedFiles.length === 0) {
+          return;
+        }
+
+        parseErrorMessage = "";
+
+        for (const entry of loadedFiles) {
+          try {
+            const text = await entry.file.text();
+            const parsed = parseCsv(text, delimiterSelect.value);
+            entry.headers = parsed.headers;
+            entry.rows = parsed.rows;
+          } catch (error) {
+            entry.headers = [];
+            entry.rows = [];
+            parseErrorMessage = `Could not parse "${entry.fileName}": ${error.message}`;
+          }
+        }
+
+        renderFileMenu();
+        renderResults();
+      }
+
+      function parseCsv(csvText, delimiter) {
+        const normalized = csvText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+        const lines = normalized.split("\n").filter((line) => line.length > 0);
+
+        if (lines.length === 0) {
+          return { headers: [], rows: [] };
+        }
+
+        const headers = splitCsvLine(lines[0], delimiter).map((header, index) => {
+          const trimmed = header.trim();
+          return trimmed.length > 0 ? trimmed : `Column ${index + 1}`;
+        });
+
+        const rows = [];
+        for (let lineIndex = 1; lineIndex < lines.length; lineIndex += 1) {
+          const cells = splitCsvLine(lines[lineIndex], delimiter);
+          const rowObject = {};
+          for (let columnIndex = 0; columnIndex < headers.length; columnIndex += 1) {
+            const columnName = headers[columnIndex];
+            rowObject[columnName] = cells[columnIndex] ?? "";
+          }
+          rows.push(rowObject);
+        }
+
+        return { headers, rows };
+      }
+
+      function splitCsvLine(line, delimiter) {
+        const values = [];
+        let currentValue = "";
+        let insideQuotes = false;
+
+        for (let index = 0; index < line.length; index += 1) {
+          const char = line[index];
+          const next = line[index + 1];
+
+          if (char === '"') {
+            if (insideQuotes && next === '"') {
+              currentValue += '"';
+              index += 1;
+            } else {
+              insideQuotes = !insideQuotes;
+            }
+            continue;
+          }
+
+          if (char === delimiter && !insideQuotes) {
+            values.push(currentValue.trim());
+            currentValue = "";
+            continue;
+          }
+
+          currentValue += char;
+        }
+
+        values.push(currentValue.trim());
+        return values;
+      }
+
+      function renderFileMenu() {
+        if (loadedFiles.length === 0) {
+          fileList.innerHTML = '<div class="hint">No files loaded yet.</div>';
+          return;
+        }
+
+        fileList.innerHTML = "";
+        loadedFiles.forEach((entry, fileIndex) => {
+          const rowCount = entry.rows.length;
+          const wrapper = document.createElement("label");
+          wrapper.className = "file-item";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = entry.selected;
+          checkbox.addEventListener("change", () => {
+            loadedFiles[fileIndex].selected = checkbox.checked;
+            renderResults();
+          });
+
+          const fileName = document.createElement("span");
+          fileName.className = "file-name";
+          fileName.textContent = entry.fileName;
+
+          const stats = document.createElement("span");
+          stats.className = "file-stats";
+          stats.textContent = `${rowCount} rows`;
+
+          wrapper.append(checkbox, fileName, stats);
+          fileList.appendChild(wrapper);
+        });
+      }
+
+      function updateTableHeaders() {
+        const scope = searchScopeSelect.value;
+        const thead = document.querySelector(".results thead tr");
+        if (scope === "row") {
+          thead.innerHTML = `
+            <th><label class="header-export-option"><input id="exportColFile" type="checkbox" checked /><span>File</span></label></th>
+            <th><label class="header-export-option"><input id="exportColRow" type="checkbox" checked /><span>Row</span></label></th>
+            <th><label class="header-export-option"><input id="exportColValue" type="checkbox" checked /><span>Matched Columns</span></label></th>
+          `;
+        } else {
+          thead.innerHTML = `
+            <th><label class="header-export-option"><input id="exportColFile" type="checkbox" checked /><span>File</span></label></th>
+            <th><label class="header-export-option"><input id="exportColRow" type="checkbox" checked /><span>Row</span></label></th>
+            <th><label class="header-export-option"><input id="exportColColumn" type="checkbox" checked /><span>Column</span></label></th>
+            <th><label class="header-export-option"><input id="exportColHeader" type="checkbox" checked /><span>Header</span></label></th>
+            <th><label class="header-export-option"><input id="exportColValue" type="checkbox" checked /><span>Value</span></label></th>
+          `;
+        }
+      }
+
+      function renderResults() {
+        const query = searchInput.value.trim();
+        const caseSensitive = caseSensitiveCheckbox.checked;
+        const matchType = matchTypeSelect.value;
+        const termOperator = termOperatorSelect.value;
+        const wildcardSyntax = wildcardSyntaxSelect.value;
+        const searchScope = searchScopeSelect.value;
+        const terms = parseTerms(query, caseSensitive);
+        const activeFiles = loadedFiles.filter((entry) => entry.selected);
+        let matches = [];
+
+        if (terms.length > 0) {
+          if (searchScope === "row" && terms.length > 1) {
+            matches = searchRowWide(activeFiles, terms, matchType, termOperator, caseSensitive, wildcardSyntax);
+          } else {
+            matches = searchCellWise(activeFiles, terms, matchType, termOperator, caseSensitive, wildcardSyntax);
+          }
+        }
+
+        lastMatches = matches;
+        const pageSize = Number(pageSizeSelect.value);
+        const totalPages = Math.max(1, Math.ceil(matches.length / pageSize));
+        if (currentPage > totalPages) {
+          currentPage = totalPages;
+        }
+        if (currentPage < 1) {
+          currentPage = 1;
+        }
+
+        const totalLoaded = loadedFiles.length;
+        const totalSelected = activeFiles.length;
+        const scopeLabel = searchScope === "row" ? "Row-wide" : "Cell";
+        status.innerHTML = `
+          <span><strong>Loaded files:</strong> ${totalLoaded}</span>
+          <span><strong>Selected files:</strong> ${totalSelected}</span>
+          <span><strong>Total matches:</strong> ${matches.length}</span>
+          <span><strong>Search mode:</strong> ${escapeHtml(matchType)} | ${escapeHtml(termOperator.toUpperCase())} | ${caseSensitive ? "Case sensitive" : "Case insensitive"} | ${matchType === "wildcard" ? escapeHtml(wildcardSyntax) : "standard"} | Scope: ${scopeLabel}</span>
+          ${
+            parseErrorMessage
+              ? `<span class="error"><strong>Error:</strong> ${escapeHtml(parseErrorMessage)}</span>`
+              : ""
+          }
+        `;
+
+        const isRowMode = searchScope === "row" && terms.length > 1;
+        const colSpan = isRowMode ? 3 : 5;
+
+        if (terms.length === 0) {
+          resultsBody.innerHTML = `
+            <tr>
+              <td class="empty" colspan="${colSpan}">Enter one or more search terms to show results.</td>
+            </tr>
+          `;
+          updatePaginationState(0, 1, 0, 0);
+          return;
+        }
+
+        if (matches.length === 0) {
+          resultsBody.innerHTML = `
+            <tr>
+              <td class="empty" colspan="${colSpan}">No matches found in selected files.</td>
+            </tr>
+          `;
+          updatePaginationState(0, 1, 0, 0);
+          return;
+        }
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, matches.length);
+        const pageMatches = matches.slice(startIndex, endIndex);
+
+        let rowsHtml;
+        if (isRowMode) {
+          rowsHtml = pageMatches
+            .map((item) => {
+              const pairsHtml = item.matchedColumns
+                .map(
+                  (mc) =>
+                    `<div class="row-match-pair"><span class="row-match-header">${escapeHtml(mc.header)}:</span><span class="row-match-value"><code>${escapeHtml(mc.value)}</code></span></div>`
+                )
+                .join("");
+              return `
+                <tr>
+                  <td>${escapeHtml(item.fileName)}</td>
+                  <td>${item.rowNumber}</td>
+                  <td><div class="row-match-detail">${pairsHtml}</div></td>
+                </tr>
+              `;
+            })
+            .join("");
+        } else {
+          rowsHtml = pageMatches
+            .map(
+              (item) => `
+                <tr>
+                  <td>${escapeHtml(item.fileName)}</td>
+                  <td>${item.rowNumber}</td>
+                  <td>${item.columnNumber}</td>
+                  <td>${escapeHtml(item.header)}</td>
+                  <td><code>${escapeHtml(item.value)}</code></td>
+                </tr>
+              `
+            )
+            .join("");
+        }
+
+        resultsBody.innerHTML = rowsHtml;
+        updatePaginationState(currentPage, totalPages, startIndex + 1, endIndex);
+      }
+
+      function searchCellWise(activeFiles, terms, matchType, termOperator, caseSensitive, wildcardSyntax) {
+        const matches = [];
+        activeFiles.forEach((entry) => {
+          entry.rows.forEach((row, rowIndex) => {
+            entry.headers.forEach((header, columnIndex) => {
+              const rawValue = row[header];
+              const value = String(rawValue ?? "");
+              if (
+                valueMatchesTerms(
+                  value,
+                  terms,
+                  matchType,
+                  termOperator,
+                  caseSensitive,
+                  wildcardSyntax,
+                )
+              ) {
+                matches.push({
+                  fileName: entry.fileName,
+                  rowNumber: rowIndex + 2,
+                  columnNumber: columnIndex + 1,
+                  header,
+                  value,
+                });
+              }
+            });
+          });
+        });
+        return matches;
+      }
+
+      function searchRowWide(activeFiles, terms, matchType, termOperator, caseSensitive, wildcardSyntax) {
+        const matches = [];
+        activeFiles.forEach((entry) => {
+          entry.rows.forEach((row, rowIndex) => {
+            const termColumnMatches = terms.map((term) => {
+              const cols = [];
+              entry.headers.forEach((header, columnIndex) => {
+                const value = String(row[header] ?? "");
+                if (valueSingleTermMatch(value, term, matchType, caseSensitive, wildcardSyntax)) {
+                  cols.push({ header, columnIndex: columnIndex + 1, value });
+                }
+              });
+              return cols;
+            });
+
+            let isMatch = false;
+            if (termOperator === "and") {
+              isMatch = termColumnMatches.every((cols) => cols.length > 0);
+            } else {
+              isMatch = termColumnMatches.some((cols) => cols.length > 0);
+            }
+
+            if (isMatch) {
+              const seenHeaders = new Set();
+              const matchedColumns = [];
+              termColumnMatches.forEach((cols) => {
+                cols.forEach((col) => {
+                  const key = col.header + ":::" + col.columnIndex;
+                  if (!seenHeaders.has(key)) {
+                    seenHeaders.add(key);
+                    matchedColumns.push(col);
+                  }
+                });
+              });
+              matchedColumns.sort((a, b) => a.columnIndex - b.columnIndex);
+
+              matches.push({
+                fileName: entry.fileName,
+                rowNumber: rowIndex + 2,
+                matchedColumns,
+              });
+            }
+          });
+        });
+        return matches;
+      }
+
+      function valueSingleTermMatch(value, term, matchType, caseSensitive, wildcardSyntax) {
+        const comparableValue = caseSensitive ? value : value.toLowerCase();
+        if (matchType === "exact") {
+          return comparableValue === term;
+        }
+        if (matchType === "wildcard") {
+          const expression = wildcardPatternToRegExp(term, wildcardSyntax);
+          return expression.test(comparableValue);
+        }
+        return comparableValue.includes(term);
+      }
+
+      function parseTerms(query, caseSensitive) {
+        if (query.length === 0) {
+          return [];
+        }
+        return query
+          .split(",")
+          .map((term) => term.trim())
+          .filter((term) => term.length > 0)
+          .map((term) => (caseSensitive ? term : term.toLowerCase()));
+      }
+
+      function valueMatchesTerms(
+        value,
+        terms,
+        matchType,
+        operator,
+        caseSensitive,
+        wildcardSyntax,
+      ) {
+        const comparableValue = caseSensitive ? value : value.toLowerCase();
+        const checks = terms.map((term) => {
+          if (matchType === "exact") {
+            return comparableValue === term;
+          }
+          if (matchType === "wildcard") {
+            const expression = wildcardPatternToRegExp(term, wildcardSyntax);
+            return expression.test(comparableValue);
+          }
+          return comparableValue.includes(term);
+        });
+
+        if (operator === "and") {
+          return checks.every(Boolean);
+        }
+        return checks.some(Boolean);
+      }
+
+      function wildcardPatternToRegExp(pattern, syntax) {
+        const manyChar = syntax === "sql" ? "%" : "*";
+        const singleChar = syntax === "sql" ? "_" : "?";
+        let regexBody = "";
+
+        for (const char of pattern) {
+          if (char === manyChar) {
+            regexBody += ".*";
+            continue;
+          }
+          if (char === singleChar) {
+            regexBody += ".";
+            continue;
+          }
+          regexBody += escapeForRegex(char);
+        }
+
+        return new RegExp(regexBody);
+      }
+
+      function escapeForRegex(text) {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      function updateWildcardControlState() {
+        const wildcardActive = matchTypeSelect.value === "wildcard";
+        wildcardSyntaxSelect.disabled = !wildcardActive;
+      }
+
+      function scheduleSearchFromTyping() {
+        if (!autoSearchCheckbox.checked) {
+          return;
+        }
+
+        if (searchDebounceTimer) {
+          window.clearTimeout(searchDebounceTimer);
+        }
+
+        searchDebounceTimer = window.setTimeout(() => {
+          runSearch();
+        }, SEARCH_DEBOUNCE_MS);
+      }
+
+      function runSearch() {
+        if (searchDebounceTimer) {
+          window.clearTimeout(searchDebounceTimer);
+          searchDebounceTimer = null;
+        }
+        activeSearchId += 1;
+        const localSearchId = activeSearchId;
+        currentPage = 1;
+        setLoadingState(true);
+        window.setTimeout(() => {
+          renderResults();
+          if (localSearchId === activeSearchId) {
+            setLoadingState(false);
+          }
+        }, 0);
+      }
+
+      function runSearchPageRefresh() {
+        activeSearchId += 1;
+        const localSearchId = activeSearchId;
+        setLoadingState(true);
+        window.setTimeout(() => {
+          renderResults();
+          if (localSearchId === activeSearchId) {
+            setLoadingState(false);
+          }
+        }, 0);
+      }
+
+      function runSearchIfAutoEnabled() {
+        if (autoSearchCheckbox.checked) {
+          runSearch();
+        }
+      }
+
+      function updatePaginationState(page, totalPages, rangeStart, rangeEnd) {
+        pageInfo.textContent = `Page ${page} / ${totalPages}`;
+        resultRangeInfo.textContent = `${rangeStart}-${rangeEnd} of ${lastMatches.length}`;
+        prevPageButton.disabled = page <= 1 || lastMatches.length === 0;
+        nextPageButton.disabled = page >= totalPages || lastMatches.length === 0;
+      }
+
+      function exportMatchesToCsv(matches) {
+        if (!matches || matches.length === 0) {
+          window.alert("No results to export yet.");
+          return;
+        }
+
+        const scope = searchScopeSelect.value;
+        const lines = [];
+
+        if (scope === "row" && matches.length > 0 && matches[0].matchedColumns) {
+          const exportFile = document.getElementById("exportColFile")?.checked ?? true;
+          const exportRow = document.getElementById("exportColRow")?.checked ?? true;
+          const exportValue = document.getElementById("exportColValue")?.checked ?? true;
+
+          const header = [];
+          if (exportFile) header.push("file");
+          if (exportRow) header.push("row");
+          if (exportValue) header.push("matched_columns");
+          lines.push(header.join(","));
+
+          matches.forEach((item) => {
+            const row = [];
+            if (exportFile) row.push(csvCell(item.fileName));
+            if (exportRow) row.push(csvCell(String(item.rowNumber)));
+            if (exportValue) {
+              const detail = item.matchedColumns
+                .map((mc) => `${mc.header}: ${mc.value}`)
+                .join(" | ");
+              row.push(csvCell(detail));
+            }
+            lines.push(row.join(","));
+          });
+        } else {
+          const selectedColumns = getSelectedExportColumns();
+          if (selectedColumns.length === 0) {
+            window.alert("Please select at least one export column.");
+            return;
+          }
+          const header = selectedColumns.map((column) => column.key);
+          lines.push(header.join(","));
+
+          matches.forEach((item) => {
+            const row = selectedColumns
+              .map((column) => column.value(item))
+              .map((cell) => csvCell(cell));
+            lines.push(row.join(","));
+          });
+        }
+
+        const csvText = lines.join("\n");
+        const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `csv-search-results-${Date.now()}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function csvCell(value) {
+        return `"${String(value).replaceAll('"', '""')}"`;
+      }
+
+      function getSelectedExportColumns() {
+        const options = [
+          {
+            key: "file",
+            checked: document.getElementById("exportColFile")?.checked ?? true,
+            value: (item) => item.fileName,
+          },
+          {
+            key: "row",
+            checked: document.getElementById("exportColRow")?.checked ?? true,
+            value: (item) => String(item.rowNumber),
+          },
+          {
+            key: "column",
+            checked: document.getElementById("exportColColumn")?.checked ?? true,
+            value: (item) => String(item.columnNumber),
+          },
+          {
+            key: "header",
+            checked: document.getElementById("exportColHeader")?.checked ?? true,
+            value: (item) => item.header,
+          },
+          {
+            key: "value",
+            checked: document.getElementById("exportColValue")?.checked ?? true,
+            value: (item) => item.value,
+          },
+        ];
+        return options.filter((option) => option.checked);
+      }
+
+      function setLoadingState(isLoading) {
+        loadingIndicator.classList.toggle("hidden", !isLoading);
+      }
+
+      function ensureProtectedFooter() {
+        const appRoot = document.querySelector("main.app");
+        if (!appRoot) {
+          return;
+        }
+
+        const linksHtml = FOOTER_LINKS.map(
+          (link) =>
+            `<a href="${link.href}" target="_blank" rel="noopener noreferrer">${link.label}</a>`,
+        ).join(" | ");
+        const footerHtml = `
+          <div>${linksHtml}</div>
+          <div>${FOOTER_COPYRIGHT}</div>
+        `.trim();
+
+        let footerElement = document.getElementById("appFooter");
+        if (!footerElement) {
+          footerElement = document.createElement("footer");
+          footerElement.id = "appFooter";
+          footerElement.className = "page-footer";
+          appRoot.appendChild(footerElement);
+        }
+
+        if (footerElement.className !== "page-footer") {
+          footerElement.className = "page-footer";
+        }
+        if (footerElement.innerHTML.trim() !== footerHtml) {
+          footerElement.innerHTML = footerHtml;
+        }
+      }
+
+      function initializeFooterProtection() {
+        ensureProtectedFooter();
+        const appRoot = document.querySelector("main.app");
+        if (!appRoot) {
+          return;
+        }
+
+        const observer = new MutationObserver(() => {
+          ensureProtectedFooter();
+        });
+
+        observer.observe(appRoot, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+      }
+
+      function escapeHtml(text) {
+        return String(text)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+    </script>
+  </body>
+</html>
