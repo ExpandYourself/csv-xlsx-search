@@ -38,7 +38,7 @@ Both tools share the same feature set:
 ## Usage
 
 ### Option 1: GitHub Pages
-Visit the hosted version (if GitHub Pages is enabled for this repo).
+Visit the hosted version: **https://expandyourself.github.io/csv-xlsx-search/**
 
 ### Option 2: Download
 1. Download the HTML file you need (`csv-search.html` or `xlsx-search.html`)
