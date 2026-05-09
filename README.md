@@ -1,27 +1,16 @@
-# CSV & XLSX Search
+# CSV / TSV / XLSX Search
 
-Browser-based search tools for CSV and Excel files. No server, no upload — everything runs locally in your browser.
+Browser-based search tool for CSV, TSV, and Excel files. No server, no upload — everything runs locally in your browser.
 
-<!-- ![CSV Search](screenshots/csv-search.png) -->
-<!-- ![XLSX Search](screenshots/xlsx-search.png) -->
+## Supported Formats
 
-## Tools
+- **CSV** — comma or semicolon delimited
+- **TSV** — tab delimited
+- **XLSX / XLS / XLSM / XLSB / ODS** — powered by [SheetJS](https://sheetjs.com/), all sheets parsed automatically
 
-### CSV Search
-Search across multiple CSV files simultaneously.
-
-- **Configurable delimiter** — comma or semicolon, switchable at any time (useful for European CSV formats that use `;` as separator)
-- Reload files on-the-fly when switching delimiters
-
-### XLSX Search
-Search across Excel files (.xlsx, .xls, .xlsm, .xlsb, .ods). Powered by [SheetJS](https://sheetjs.com/).
-
-- Automatically parses **all sheets** in each workbook
-- Each sheet appears as a separate entry in the search scope
+Format is auto-detected by file extension. The delimiter can also be set manually or overridden at any time.
 
 ## Features
-
-Both tools share the same feature set:
 
 - **Multi-file support** — load and search across multiple files at once
 - **File/sheet selection** — choose which files or sheets to include in the search
@@ -38,14 +27,16 @@ Both tools share the same feature set:
 ## Usage
 
 ### Option 1: GitHub Pages
+
 Visit the hosted version: **https://expandyourself.github.io/csv-xlsx-search/**
 
 ### Option 2: Download
-1. Download the HTML file you need (`csv-search.html` or `xlsx-search.html`)
+
+1. Download `index.html`
 2. Open it in any modern browser
 3. Load your files and search
 
-That's it. No install, no dependencies, no build step.
+No install, no dependencies, no build step.
 
 ## Row-Wide Search
 
